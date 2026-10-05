@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Metrics · NIMAR Delivery Tracker{% endblock %}
+{% block body_class %}control-room{% endblock %}
+{% block main_class %}container-wide{% endblock %}
+{% block content %}
+<section class="dash-layout" id="metrics-app">
+  <div class="import-header">
+    <div>
+      <h1>Metrics</h1>
+      <p class="muted">Lightweight management reporting from live tracker data.</p>
+    </div>
+    <a class="btn btn-small btn-ghost" href="{% url 'metrics:dashboard' %}">Dashboard</a>
+  </div>
+  <div class="kpi-strip" id="metrics-kpis"></div>
+  <div class="dash-grid">
+    <section class="import-panel import-wide">
+      <h2>Phase breakdown</h2>
+      <div class="table-wrap">
+        <table class="compact-table" id="metrics-phase-table">
+          <thead>
+            <tr>
+              <th>Phase</th><th>Total</th><th>Planned</th><th>In progress</th>
+              <th>Awaiting</th><th>Rework</th><th>Closed</th><th>Completion %</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="import-panel import-wide">
+      <h2>Module breakdown</h2>
+      <div class="table-wrap">
+        <table class="compact-table" id="metrics-module-table">
+          <thead>
+            <tr><th>Module</th><th>Total</th><th>Completed</th><th>Open</th><th>Issues</th><th>Completion %</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="import-panel">
+      <h2>Responsibility</h2>
+      <div id="metrics-responsibility" class="muted">Loading…</div>
+    </section>
+    <section class="import-panel">
+      <h2>Time metrics</h2>
+      <div id="metrics-time" class="muted">Loading…</div>
+    </section>
+    <section class="import-panel import-wide">
+      <h2>Trend charts</h2>
+      <div class="chart-row">
+        <canvas id="metrics-chart-closed" height="140"></canvas>
+        <canvas id="metrics-chart-issues" height="140"></canvas>
+      </div>
+    </section>
+  </div>
+  <p class="error" id="metrics-error" hidden></p>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="/static/js/metrics.js"></script>
+{% endblock %}

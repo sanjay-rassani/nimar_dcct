@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}NIMAR Delivery Tracker{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <header class="topbar">
+    <div class="brand-nav">
+      <a class="brand" href="{% url 'metrics:dashboard' %}">NIMAR Delivery &amp; Client Closure Tracker</a>
+      {% if user.is_authenticated %}
+      <nav class="top-nav">
+        <a href="{% url 'metrics:dashboard' %}">Dashboard</a>
+        <a href="{% url 'tracker:register' %}">Points</a>
+        <a href="{% url 'tracker:kanban' %}">Kanban</a>
+        <a href="{% url 'tracker:timeline' %}">Timeline</a>
+        <a href="{% url 'metrics:metrics' %}">Metrics</a>
+        {% if user.is_forbmax or user.is_superuser %}
+        <a href="{% url 'imports_app:import' %}">Import</a>
+        <a href="/api/export/excel/">Export</a>
+        {% endif %}
+        {% if user.is_forbmax_admin or user.is_superuser %}
+        <a href="{% url 'accounts:users' %}">Users</a>
+        {% endif %}
+      </nav>
+      {% endif %}
+    </div>
+    {% if user.is_authenticated %}
+    <div class="topbar-meta">
+      <span>{{ user.name }} · {{ user.get_role_display }}</span>
+      <form method="post" action="{% url 'accounts:logout' %}" class="inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-small">Logout</button>
+      </form>
+    </div>
+    {% endif %}
+  </header>
+  <main class="{% block main_class %}container{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

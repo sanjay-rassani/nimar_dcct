@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Excel Import · NIMAR Delivery Tracker{% endblock %}
+{% block body_class %}control-room{% endblock %}
+{% block main_class %}container-wide{% endblock %}
+{% block content %}
+<section class="import-layout" id="import-app">
+  <div class="import-header">
+    <div>
+      <h1>Excel import</h1>
+      <p class="muted">Upload → Analyze → Map → Preview → Confirm. No silent overwrites.</p>
+    </div>
+    <div class="toolbar-actions">
+      <a class="btn btn-small btn-ghost" href="{% url 'tracker:register' %}">Back to points</a>
+      <a class="btn btn-small" href="/api/export/excel/">Export all (.xlsx)</a>
+    </div>
+  </div>
+
+  <div class="import-grid">
+    <section class="import-panel">
+      <h2>1. Upload workbook</h2>
+      <form id="upload-form" class="stack-tight">
+        <label>File (.xlsx only)
+          <input type="file" id="upload-file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+        </label>
+        <p class="error" id="upload-error" hidden></p>
+        <button type="submit" class="btn btn-small">Upload &amp; analyze</button>
+      </form>
+    </section>
+
+    <section class="import-panel">
+      <h2>2. Select sheet</h2>
+      <label>Sheet
+        <select id="sheet-select" disabled>
+          <option value="">Upload a file first</option>
+        </select>
+      </label>
+      <p class="muted" id="sheet-meta">—</p>
+      <button type="button" class="btn btn-small" id="btn-select-sheet" disabled>Use sheet</button>
+    </section>
+
+    <section class="import-panel import-wide">
+      <h2>3. Column mapping</h2>
+      <div id="column-mapping" class="mapping-grid muted">Select a sheet to map columns.</div>
+    </section>
+
+    <section class="import-panel">
+      <h2>4. Status mapping</h2>
+      <p class="muted">Free-form spreadsheet statuses are never auto-converted. Map each value explicitly, or leave blank to fail those rows.</p>
+      <div id="status-mapping" class="mapping-list">—</div>
+    </section>
+
+    <section class="import-panel">
+      <h2>5. Phase mapping</h2>
+      <div id="phase-mapping" class="mapping-list">—</div>
+    </section>
+
+    <section class="import-panel import-wide">
+      <div class="register-toolbar">
+        <h2>6. Preview</h2>
+        <div class="toolbar-actions">
+          <button type="button" class="btn btn-small" id="btn-preview" disabled>Validate &amp; preview</button>
+          <button type="button" class="btn btn-small" id="btn-confirm" disabled>Confirm import</button>
+        </div>
+      </div>
+      <p class="error" id="preview-error" hidden></p>
+      <div id="preview-counts" class="kpi-strip"></div>
+      <div class="table-wrap">
+        <table class="compact-table" id="preview-table">
+          <thead>
+            <tr>
+              <th>Row</th>
+              <th>Point ID</th>
+              <th>Action</th>
+              <th>Status</th>
+              <th>Conflicts / errors</th>
+            </tr>
+          </thead>
+          <tbody id="preview-tbody">
+            <tr><td colspan="5" class="empty-state">No spreadsheet has been imported.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="import-panel import-wide">
+      <h2>Import history</h2>
+      <div class="table-wrap">
+        <table class="compact-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>File</th>
+              <th>Uploaded by</th>
+              <th>When</th>
+              <th>Rows</th>
+              <th>Created</th>
+              <th>Updated</th>
+              <th>Failed</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody">
+            <tr><td colspan="9" class="empty-state">No spreadsheet has been imported.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/import.js"></script>
+{% endblock %}

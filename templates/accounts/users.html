@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Users · NIMAR Delivery Tracker{% endblock %}
+{% block body_class %}control-room{% endblock %}
+{% block main_class %}container-wide{% endblock %}
+{% block content %}
+<section class="dash-layout" id="users-app">
+  <div class="import-header">
+    <div>
+      <h1>User management</h1>
+      <p class="muted">Forbmax Admin only. Create, deactivate, and change roles.</p>
+    </div>
+  </div>
+  <div class="dash-grid">
+    <section class="import-panel">
+      <h2>Create user</h2>
+      <form id="user-create-form" class="stack-tight">
+        <label>Name <input name="name" required></label>
+        <label>Email <input name="email" type="email" required></label>
+        <label>Role
+          <select name="role" required>
+            {% for value, label in roles %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Temp password <input name="password" value="ChangeMe123!" required></label>
+        <p class="error" id="user-create-error" hidden></p>
+        <button class="btn btn-small" type="submit">Create</button>
+      </form>
+    </section>
+    <section class="import-panel import-wide">
+      <h2>Users</h2>
+      <p class="error" id="users-error" hidden></p>
+      <div class="table-wrap">
+        <table class="compact-table">
+          <thead>
+            <tr>
+              <th>Name</th><th>Email</th><th>Organization</th><th>Role</th><th>Active</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/users.js"></script>
+{% endblock %}

@@ -1,0 +1,1368 @@
+NIMAR
+Delivery & Client Closure Tracker
+
+Product Requirements Document (PRD)
+
+Lightweight internal + client-facing delivery tracker
+Primary organizations: Forbmax and NIMAR
+Initial focus: Demo Day
+Future lifecycle: 25% / 75% / SLA
+Reference UI: NIMAR Deployment Plan.html
+
+  -----------------------------------------------------------------------
+  Document intent
+  This document defines the baseline MVP requirements for replacing
+  spreadsheet-based NIMAR delivery tracking with a small, searchable,
+  auditable web application. The application is intentionally scoped as a
+  lightweight operational tool, not a large project-management platform.
+  -----------------------------------------------------------------------
+
+  -----------------------------------------------------------------------
+
+Version: 1.0 | Status: Baseline / Ready for technical breakdown
+
+Contents
+
+  1. Executive Summary
+
+  2. Business Problem
+
+  3. Product Objectives
+
+  4. Product Principles
+
+  5. Scope
+
+  6. Users and Organizations
+
+  7. User Roles
+
+  8. Authentication and Access
+
+  9. Core Business Object: Delivery Point
+
+  10. Phase Model
+
+  11. Status Model
+
+  12. Point Lifecycle
+
+  13. Dashboard Requirements
+
+  14. Points / Register Page
+
+  15. Point Detail Drawer
+
+  16. Issue Management
+
+  17. Comments
+
+  18. Evidence and Attachments
+
+  19. Activity / Audit History
+
+  20. Excel Import
+
+  21. Excel Export
+
+  22. Metrics Page
+
+  23. Gantt / Timeline View
+
+  24. Kanban View
+
+  25. UI / UX Requirements
+
+  26. Search and Filtering
+
+  27. Notifications
+
+  28. User Management
+
+  29. Organization Isolation
+
+  30. Data Model
+
+  31. Recommended Technical Architecture
+
+  32. Backend API Requirements
+
+  33. Data Validation Rules
+
+  34. Import Conflict Handling
+
+  35. Audit and Traceability Requirements
+
+  36. Security Requirements
+
+  37. Performance Requirements
+
+  38. Recommended Database Indexes
+
+  39. Error Handling
+
+  40. Empty States
+
+  41. Metrics Calculation Definitions
+
+  42. Phase-Level Reporting
+
+  43. Client Experience
+
+  44. Forbmax Experience
+
+  45. Spreadsheet Migration Strategy
+
+  46. Important Spreadsheet Rule
+
+  47. Data Preservation
+
+  48. Versioning
+
+  49. Deployment
+
+  50. Client Access Deployment
+
+  51. Logging and Monitoring
+
+  52. Backup Requirements
+
+  53. Testing Requirements
+
+  54. Acceptance Criteria
+
+  55. MVP Release Structure
+
+  56. Recommended First Version Data Flow
+
+  57. Recommended Core Workflow
+
+  58. Non-Functional Requirements
+
+  59. Open Decisions / Items to Confirm
+
+  60. Definition of Success
+
+  61. Final Product Definition
+
+1. Executive Summary
+
+NIMAR is approaching completion and the delivery/closure process is
+currently being managed primarily through spreadsheets. The business
+needs a small application that provides a single, controlled view of
+requirements, progress, client responses, issues, evidence, history, and
+management metrics.
+
+The application should replace the spreadsheet as the day-to-day
+operational tracker while retaining Excel as an import/export format.
+Forbmax will manage the tracker; NIMAR will have controlled client
+visibility and the ability to raise issues and participate in
+verification.
+
+The supplied NIMAR Deployment Plan.html is the primary visual reference.
+It already uses a compact control-room layout with KPI summaries,
+filters, tabs, tables, detail drawers, timeline/Gantt, Kanban, and
+decision/history concepts. The new product should simplify and reuse
+these ideas rather than introducing a high-fidelity redesign.
+
+2. Business Problem
+
+-   Spreadsheet-based tracking is difficult to maintain consistently.
+
+-   Multiple stakeholders need a common source of truth.
+
+-   Client-facing visibility is difficult to control cleanly in a sheet.
+
+-   Status changes and issue handling are not centralized.
+
+-   Historical changes and accountability are difficult to track.
+
+-   Progress and management metrics require manual calculation.
+
+-   Future phases would require continued spreadsheet maintenance.
+
+-   There is no lightweight controlled interface where NIMAR can review
+    progress and raise issues.
+
+3. Product Objectives
+
+-   Provide a single operational tracker for NIMAR delivery and closure.
+
+-   Allow Forbmax to fully manage the tracker.
+
+-   Allow NIMAR users to view progress and raise issues.
+
+-   Provide clear status and phase visibility.
+
+-   Provide useful management metrics without building a heavy analytics
+    platform.
+
+-   Import existing spreadsheet data safely.
+
+-   Export current data back to Excel.
+
+-   Retain a lightweight activity/audit trail.
+
+-   Support Demo Day first and reuse the same engine for 25%, 75%, and
+    SLA.
+
+4. Product Principles
+
+-   Lightweight: avoid unnecessary infrastructure and enterprise
+    features.
+
+-   One source of truth: once imported and confirmed, the database
+    becomes the operational source.
+
+-   Point-centric: one delivery point is the central business object.
+
+-   Client-safe: authorization must be enforced on the backend.
+
+-   Reusable workflow: future phases reuse the same model and UI.
+
+-   Simple UX: optimize for scanning, filtering, updating, resolving,
+    and reviewing.
+
+5. Scope
+
+5.1 In Scope
+
+-   Authentication
+
+-   User and role management
+
+-   Organization separation
+
+-   Dashboard
+
+-   Delivery-point register
+
+-   Point detail view
+
+-   Phase and status management
+
+-   Issue management
+
+-   Comments
+
+-   Evidence/links
+
+-   Activity history
+
+-   Excel import
+
+-   Excel export
+
+-   Metrics
+
+-   Search and filtering
+
+-   Basic timeline/Gantt
+
+-   Basic Kanban
+
+-   Client-facing read-only behavior
+
+-   NIMAR issue submission
+
+-   Forbmax management
+
+-   Basic HTTPS deployment
+
+5.2 Out of Scope for MVP
+
+-   Full project-management functionality
+
+-   Task dependencies and resource planning
+
+-   Timesheets
+
+-   CRM/billing/procurement
+
+-   Complex workflow builders
+
+-   Dedicated notification platform
+
+-   Microservices architecture
+
+-   Separate analytics platform
+
+-   Elasticsearch/OpenSearch
+
+-   Native mobile/desktop apps
+
+-   Complex multi-tenant SaaS architecture
+
+-   Unnecessary real-time infrastructure
+
+6. Users and Organizations
+
+The system supports two organizations: Forbmax and NIMAR. The
+application uses authenticated identity plus organization and role to
+determine what the user can see and change.
+
+  -----------------------------------------------------------------------
+  Organization                        Purpose
+  ----------------------------------- -----------------------------------
+  Forbmax                             Primary managing organization; owns
+                                      delivery tracking, issue
+                                      resolution, imports, configuration,
+                                      and reporting.
+
+  NIMAR                               Client organization; reviews
+                                      progress, provides
+                                      responses/decisions where
+                                      applicable, verifies work, and
+                                      raises issues.
+  -----------------------------------------------------------------------
+
+7. User Roles
+
+  -----------------------------------------------------------------------
+  Role                                Key permissions
+  ----------------------------------- -----------------------------------
+  Forbmax Admin                       Full access: points,
+                                      imports/exports, users, phases,
+                                      configuration, issues, evidence,
+                                      metrics, history.
+
+  Forbmax Member                      Operational access: view/update
+                                      permitted point fields, statuses,
+                                      responses, evidence, assigned
+                                      issues, comments, metrics.
+
+  NIMAR User                          View points and progress;
+                                      search/filter; view metrics; raise
+                                      issues; comment; attach supporting
+                                      material; provide client response
+                                      where explicitly enabled.
+  -----------------------------------------------------------------------
+
+8. Authentication and Access
+
+All non-public application pages require authentication. A simple
+browser-based login is sufficient for the MVP. NIMAR users should access
+the system through a normal HTTPS URL and should not need VPN access,
+local installation, Docker, or database credentials.
+
+  -----------------------------------------------------------------------
+  Recommended access pattern
+  Browser -> HTTPS URL -> Login -> Organization/Role -> Allowed tracker
+  views/actions. Use server-side permission checks even when the frontend
+  hides management controls.
+  -----------------------------------------------------------------------
+
+  -----------------------------------------------------------------------
+
+9. Core Business Object: Delivery Point
+
+Every requirement or tracked item is represented as a Delivery Point.
+The point is the central entity to which phase, module, status, issue,
+evidence, comments, ownership, and activity history are attached.
+
+  -----------------------------------------------------------------------
+  Field                               Description
+  ----------------------------------- -----------------------------------
+  ID                                  Unique business identifier, e.g.
+                                      A-001.
+
+  Organization                        Relevant organization/context.
+
+  Annexure                            Source category such as A/B where
+                                      applicable.
+
+  Number                              Original spreadsheet number.
+
+  Module                              Functional area.
+
+  Title                               Short title where available.
+
+  Requirement                         Full requirement text.
+
+  Phase                               Demo Day / 25% / 75% / SLA or
+                                      configured equivalent.
+
+  Status                              Current workflow state.
+
+  Forbmax Response                    Forbmax response/implementation
+                                      note.
+
+  NIMAR Response                      Client response or verification
+                                      note.
+
+  Decision                            Decision/acceptance information.
+
+  Remarks                             Additional notes.
+
+  Owner                               Responsible Forbmax user.
+
+  Due Date                            Target completion date.
+
+  Created/Updated                     Creation and latest modification
+                                      timestamps.
+
+  Updated By                          User who made the latest update.
+  -----------------------------------------------------------------------
+
+10. Phase Model
+
+The initial business lifecycle is Demo Day, 25%, 75%, and SLA. Phase
+names and dates should be configurable. The supplied reference HTML
+contains additional categories such as Accepted at review, Under
+discussion, and Documentation & assurance; those should be treated as
+configurable workflow/reporting categories rather than hard-coded
+assumptions.
+
+  -----------------------------------------------------------------------
+  Phase                               Initial purpose
+  ----------------------------------- -----------------------------------
+  Demo Day                            Current primary focus:
+                                      demonstrate/check points and
+                                      capture follow-up.
+
+  25%                                 Final 25% delivery milestone.
+
+  75%                                 75% delivery milestone.
+
+  SLA                                 Improvements and obligations
+                                      handled under the SLA period.
+  -----------------------------------------------------------------------
+
+11. Status Model
+
+  -----------------------------------------------------------------------
+  Status                              Meaning
+  ----------------------------------- -----------------------------------
+  Planned                             Scope/work not yet submitted or
+                                      started.
+
+  Scope Approval                      Scope submitted to NIMAR; execution
+                                      blocked until approval where
+                                      required.
+
+  In Progress                         Scope approved; Forbmax is
+                                      building/fixing.
+
+  Awaiting Verification               Submitted to NIMAR for
+                                      verification; client response time
+                                      may be measured.
+
+  Rework Requested                    NIMAR found issues and changes are
+                                      required.
+
+  Verified & Closed                   NIMAR has verified and accepted the
+                                      point.
+  -----------------------------------------------------------------------
+
+12. Point Lifecycle
+
+1.  Planned
+
+2.  Scope Approval
+
+3.  In Progress
+
+4.  Awaiting Verification
+
+5.  Verified & Closed
+
+Alternative path: Awaiting Verification -> Rework Requested -> In
+Progress -> Awaiting Verification -> Verified & Closed.
+
+  -----------------------------------------------------------------------
+  Workflow rule
+  Where scope approval is required, a point must not move to active
+  implementation until the required approval is recorded. A point is
+  considered closed only after NIMAR verification/acceptance.
+  -----------------------------------------------------------------------
+
+  -----------------------------------------------------------------------
+
+13. Dashboard Requirements
+
+13.1 KPI Cards
+
+-   Total points
+
+-   Closed points
+
+-   Open points
+
+-   In Progress
+
+-   Awaiting NIMAR verification
+
+-   Rework requested
+
+-   Open issues
+
+-   Overdue points
+
+-   Overall completion %
+
+13.2 Visual Sections
+
+-   Progress by phase
+
+-   Progress by module
+
+-   Responsibility metrics (waiting for Forbmax / waiting for NIMAR)
+
+-   Issue summary
+
+-   Completion trend
+
+-   Points closed over time
+
+-   Issues opened vs resolved
+
+14. Points / Register Page
+
+-   Display ID, module, requirement/title, phase, status, owner, due
+    date, issue indicator, and updated time.
+
+-   Search by ID, title, requirement, module, responses, decisions,
+    remarks, and issue text.
+
+-   Filter by phase, module, status, annexure, issue status, and owner.
+
+-   Support sorting by ID, module, phase, status, due date, and updated
+    date.
+
+-   Use pagination when dataset size requires it.
+
+15. Point Detail Drawer
+
+Selecting a row should open a side drawer or detail page. A side drawer
+is preferred because the supplied reference UI already uses this
+interaction pattern.
+
+-   Header: ID, module, phase, status, close button
+
+-   Full requirement text
+
+-   Current status
+
+-   Forbmax response
+
+-   NIMAR response
+
+-   Decision
+
+-   Remarks
+
+-   Owner and due date
+
+-   Issues
+
+-   Evidence/links
+
+-   Activity history
+
+16. Issue Management
+
+Issue management should remain deliberately simple. Every issue belongs
+to one delivery point.
+
+  -----------------------------------------------------------------------
+  Field                               Description
+  ----------------------------------- -----------------------------------
+  ID                                  Unique issue identifier.
+
+  Point                               Related delivery point.
+
+  Title                               Issue title.
+
+  Description                         Issue details.
+
+  Status                              Open / Acknowledged / In Progress /
+                                      Resolved / Closed.
+
+  Raised By                           User and organization.
+
+  Assigned To                         Responsible user.
+
+  Created/Updated                     Timestamps.
+
+  Resolved At                         Resolution timestamp.
+  -----------------------------------------------------------------------
+
+NIMAR workflow: open point -> raise issue -> describe -> attach evidence
+-> submit. Forbmax workflow: review -> acknowledge -> work -> respond ->
+resolve. NIMAR then verifies and closes where permitted.
+
+17. Comments
+
+Comments provide lightweight collaboration without turning the
+application into a chat platform. A point or issue may have
+chronological comments with author and timestamp. Optional attachments
+may be included.
+
+18. Evidence and Attachments
+
+Evidence may include screenshots, PDFs, test reports, demo recordings,
+documentation, and external URLs. The reference UI already supports
+categorized scope and verification links; the new system should preserve
+that lightweight idea.
+
+-   Store label, file/URL reference, type, uploader, and timestamp.
+
+-   Prefer object storage for large files; keep structured metadata in
+    PostgreSQL.
+
+-   Validate uploaded file types and sizes.
+
+19. Activity / Audit History
+
+Important changes must be recorded in a lightweight immutable activity
+log. Examples: status changes, point edits, issue creation/status
+changes, comments, evidence changes, owner changes, and decisions.
+
+  -----------------------------------------------------------------------
+  Audit field                         Description
+  ----------------------------------- -----------------------------------
+  Actor                               User making the change.
+
+  Organization                        Actor organization.
+
+  Entity                              Point/issue/etc.
+
+  Action                              What occurred.
+
+  Old Value                           Previous value where applicable.
+
+  New Value                           New value where applicable.
+
+  Timestamp                           When the action occurred.
+  -----------------------------------------------------------------------
+
+20. Excel Import
+
+Excel import is a core MVP feature. The workflow is: Upload -> Analyze
+-> Map Columns -> Validate -> Preview -> Confirm -> Import.
+
+20.1 Supported Format
+
+Initial support: .xlsx. CSV and legacy .xls may be considered later.
+
+20.2 Workbook Handling
+
+-   Identify workbook and sheet names.
+
+-   Allow the user to select a sheet.
+
+-   Detect headers and row count.
+
+-   Do not assume the spreadsheet is clean.
+
+20.3 Column Mapping
+
+  -----------------------------------------------------------------------
+  Spreadsheet column                  System field (example)
+  ----------------------------------- -----------------------------------
+  Point ID                            external_id
+
+  Module                              module
+
+  Requirement                         requirement
+
+  Status                              status
+
+  Phase                               phase
+
+  Response                            Forbmax Response / source response
+
+  Decision                            decision
+
+  Remarks                             remarks
+  -----------------------------------------------------------------------
+
+20.4 Validation & Preview
+
+-   Duplicate IDs
+
+-   Missing IDs
+
+-   Unsupported phase/status values
+
+-   Invalid dates
+
+-   Empty required fields
+
+-   Malformed workbook structure
+
+-   New vs existing records
+
+  -----------------------------------------------------------------------
+  Import safety rule
+  The importer must not silently overwrite data. The preview must
+  identify whether each row will CREATE, UPDATE, SKIP, or FAIL before the
+  user confirms the import.
+  -----------------------------------------------------------------------
+
+  -----------------------------------------------------------------------
+
+20.5 Import History
+
+-   File name
+
+-   Uploaded by
+
+-   Timestamp
+
+-   Total rows
+
+-   Created
+
+-   Updated
+
+-   Failed
+
+-   Final import status
+
+21. Excel Export
+
+-   Export all points.
+
+-   Export the currently filtered set.
+
+-   Export phase-specific or issue-specific data where useful.
+
+-   Preserve major operational fields and include update timestamps.
+
+22. Metrics Page
+
+Metrics should be detailed enough for management reporting but
+lightweight enough to calculate from the core relational data.
+
+  -----------------------------------------------------------------------
+  Metric group                        Metrics
+  ----------------------------------- -----------------------------------
+  Overall                             Total, closed, open, in progress,
+                                      progress %, overdue, open issues,
+                                      resolved issues
+
+  Phase                               Total, planned, in progress,
+                                      awaiting verification, rework,
+                                      closed, completion %
+
+  Module                              Total, completed, open, issues,
+                                      completion %
+
+  Responsibility                      Waiting for Forbmax, waiting for
+                                      NIMAR, awaiting verification,
+                                      rework
+
+  Time                                Average/median resolution time,
+                                      average NIMAR response time, oldest
+                                      open issue
+
+  Trend                               Completion trend, points closed
+                                      over time, issues opened vs
+                                      resolved
+  -----------------------------------------------------------------------
+
+23. Gantt / Timeline View
+
+Provide a lightweight timeline showing phase dates, milestone dates,
+progress, point counts, and overdue indicators. Advanced task
+dependencies are not required.
+
+24. Kanban View
+
+Provide optional status-based visualization using the six core statuses.
+Cards should show ID, module, title/short requirement, phase, due date,
+and issue count. Drag-and-drop is optional; a status dropdown is
+sufficient for MVP if drag-and-drop adds unnecessary complexity.
+
+25. UI / UX Requirements
+
+The interface should visually follow the supplied NIMAR Deployment
+Plan.html: compact control-room styling, neutral surfaces, clear
+typography, small buttons, KPI strip, filter rail, compact tables, tabs,
+and side drawer. Avoid high-fidelity marketing UI, large illustrations,
+excessive animations, and heavy card grids.
+
+-   Desktop/laptop/tablet usable.
+
+-   Mobile viewing should remain functional but does not need a
+    mobile-first redesign.
+
+-   Use clear empty states and loading/error states.
+
+-   Keep primary actions obvious but limited.
+
+26. Search and Filtering
+
+-   Phase
+
+-   Module
+
+-   Status
+
+-   Annexure
+
+-   Issue status
+
+-   Owner
+
+-   Due date (optional)
+
+-   Updated date (optional)
+
+Filters should combine logically. Example: Phase=Demo Day AND
+Status=Awaiting Verification AND Module=AI Assistant.
+
+27. Notifications
+
+No dedicated notification subsystem is required for MVP. In-app counters
+and visual indicators are sufficient. Optional email notifications may
+be added for critical events such as an issue raised by NIMAR, issue
+resolution, response required, or overdue items.
+
+28. User Management
+
+-   Forbmax Admin can create/invite users, deactivate users, change
+    role, and manage access.
+
+-   NIMAR users should not manage other users in MVP unless explicitly
+    enabled later.
+
+-   Display name, email, organization, role, and active/inactive status.
+
+29. Organization Isolation
+
+Every user belongs to an organization. Authorization must be
+organization-aware and enforced on the backend. Frontend visibility
+alone is not sufficient.
+
+30. Data Model
+
+  -----------------------------------------------------------------------
+  Entity                              Core fields
+  ----------------------------------- -----------------------------------
+  User                                id, name, email/auth reference,
+                                      organization, role, active,
+                                      timestamps
+
+  Organization                        id, name, code, active
+
+  Phase                               id, name, code, description,
+                                      start/end date, order, active
+
+  Module                              id, name, active
+
+  Point                               id, external_id, annexure, number,
+                                      module, phase, title, requirement,
+                                      status, responses, decision,
+                                      remarks, owner, due date,
+                                      timestamps
+
+  Issue                               id, point, title, description,
+                                      status, raised_by, assigned_to,
+                                      timestamps
+
+  Comment                             id, point/issue, author, message,
+                                      timestamp
+
+  Attachment                          id, point/issue, label, file/URL,
+                                      type, uploader, timestamp
+
+  ActivityLog                         id, entity, action, actor, old/new
+                                      values, timestamp
+
+  ImportJob                           id, file, uploader, timestamp,
+                                      totals, status
+  -----------------------------------------------------------------------
+
+31. Recommended Technical Architecture
+
+Use a simple monolithic architecture. The recommended implementation is
+Django + PostgreSQL with server-rendered HTML/CSS/vanilla JavaScript and
+openpyxl for Excel processing. A small chart library such as Chart.js
+may be used for metrics.
+
+  -----------------------------------------------------------------------
+  Architecture principle
+  Do not introduce microservices, Redis/Celery, WebSockets,
+  Elasticsearch, a separate analytics service, or a complex frontend
+  framework unless a real product requirement justifies them.
+  -----------------------------------------------------------------------
+
+  -----------------------------------------------------------------------
+
+32. Backend API Requirements
+
+POST /api/auth/login
+POST /api/auth/logout
+GET /api/points
+GET /api/points/{id}
+POST /api/points
+PATCH /api/points/{id}
+GET /api/phases
+GET /api/modules
+GET /api/statuses
+GET /api/issues
+GET /api/issues/{id}
+POST /api/issues
+PATCH /api/issues/{id}
+POST /api/points/{id}/comments
+GET /api/points/{id}/history
+POST /api/import/excel
+GET /api/import/{id}
+POST /api/import/{id}/confirm
+GET /api/export/excel
+GET /api/metrics/overview
+GET /api/metrics/phases
+GET /api/metrics/modules
+GET /api/metrics/issues
+
+33. Data Validation Rules
+
+-   Point ID must be unique.
+
+-   Phase and status must map to configured values.
+
+-   Due dates must be valid dates.
+
+-   Closed points require the information needed to demonstrate
+    verification/acceptance.
+
+-   Closed issues require resolver and resolution timestamp.
+
+-   Required fields must be validated before save.
+
+34. Import Conflict Handling
+
+When an imported row matches an existing point, show the old and new
+values and require confirmation before updating. Example: A-001
+Existing=In Progress, Imported=Verified -> Action=UPDATE.
+
+35. Audit and Traceability Requirements
+
+The system must be able to answer: who changed a record, what changed,
+when it changed, and (where applicable) what the old and new values
+were.
+
+36. Security Requirements
+
+-   Authenticated access for protected pages.
+
+-   Backend authorization for every write operation.
+
+-   Secure password hashing when local authentication is used.
+
+-   HTTPS in production.
+
+-   HTTP-only/secure cookies where applicable.
+
+-   CSRF protection for browser forms/requests.
+
+-   File type and size validation.
+
+-   Never expose stack traces or sensitive backend details to end users.
+
+37. Performance Requirements
+
+The expected dataset is hundreds to low thousands of points, not
+millions. Prioritize simple, indexed relational queries, pagination for
+large tables, efficient metric queries, and safe spreadsheet imports.
+
+38. Recommended Database Indexes
+
+-   Point: external_id, phase_id, module_id, status, owner_id, due_date,
+    updated_at
+
+-   Issue: point_id, status
+
+-   ActivityLog: entity_type/entity_id, created_at
+
+39. Error Handling
+
+-   Provide clear, actionable user-facing errors.
+
+-   Do not show stack traces.
+
+-   Example: "This point cannot move to In Progress because scope
+    approval is pending."
+
+-   Example: "Unable to import file: duplicate point IDs found."
+
+40. Empty States
+
+-   No points match the selected filters.
+
+-   No open issues.
+
+-   No activity recorded yet.
+
+-   No spreadsheet has been imported.
+
+41. Metrics Calculation Definitions
+
+  -----------------------------------------------------------------------
+  Metric                              Definition
+  ----------------------------------- -----------------------------------
+  Completion %                        Closed Points / Total Points x 100
+
+  Open                                Any point not in Verified & Closed
+
+  Overdue                             Due date is before current date and
+                                      point is not closed
+
+  Awaiting Verification               Status = Awaiting Verification
+
+  Rework                              Status = Rework Requested
+
+  Open Issue                          Issue status is not Closed
+
+  NIMAR Response Time                 Elapsed time between submission to
+                                      NIMAR and NIMAR decision/response,
+                                      where timestamps exist
+  -----------------------------------------------------------------------
+
+42. Phase-Level Reporting
+
+Management must be able to answer, for each phase, how many points
+exist, how many are completed, how many are open, how many are awaiting
+verification, how many are in rework, how many have issues, and what
+percentage is complete.
+
+43. Client Experience
+
+When a NIMAR user logs in, the first experience should emphasize overall
+progress, phase progress, open issues, recent updates, and points that
+require NIMAR review. Internal Forbmax management controls must not
+clutter the client view.
+
+44. Forbmax Experience
+
+Forbmax users should see remaining work, overdue points, rework,
+client-pending actions, open issues, progress by phase/module, and
+management controls appropriate to their role.
+
+45. Spreadsheet Migration Strategy
+
+  1. Collect the latest official spreadsheets.
+
+  2. Inspect workbook/sheet structure, headers, merged cells, formulas,
+  hidden columns, duplicates, status values, phase values, and dates.
+
+  3. Define the canonical database schema and mapping.
+
+  4. Import the current dataset.
+
+  5. Verify a sample of records against the source sheet.
+
+  6. Keep the original spreadsheet as a frozen reference copy.
+
+  7. Move day-to-day operational tracking to the application.
+
+46. Important Spreadsheet Rule
+
+The importer must not assume the source sheet is normalized. The
+application should preserve original values and map free-form
+spreadsheet text into structured fields carefully. For example, source
+sheets may contain statuses such as Not implemented, Partially
+Implemented, Implemented, and multi-line observations. These should not
+automatically become system statuses without explicit mapping logic.
+
+47. Data Preservation
+
+During initial migration, do not silently discard any source
+information. If a field does not yet have a dedicated structured column,
+retain it in an appropriate notes/source-metadata field until a better
+mapping is agreed.
+
+48. Versioning
+
+Full document versioning is not required for MVP. Important changes must
+instead be captured in Activity Log. A formal snapshot/version system
+can be added later if required.
+
+49. Deployment
+
+Recommended production shape: Internet -> DNS -> HTTPS/reverse proxy ->
+Django application -> PostgreSQL + storage. The application should be
+independently deployable as a small service.
+
+50. Client Access Deployment
+
+NIMAR should receive a normal HTTPS URL. No VPN, desktop installation,
+local environment, Docker setup, or database access should be required
+on the client side.
+
+51. Logging and Monitoring
+
+-   Application errors
+
+-   Authentication failures
+
+-   Import failures
+
+-   Permission failures
+
+-   Database errors
+
+-   Unexpected exceptions
+
+-   Basic /health endpoint
+
+52. Backup Requirements
+
+-   Daily production database backup.
+
+-   Defined retention period.
+
+-   Tested restore procedure.
+
+-   Storage/evidence included in backup strategy.
+
+53. Testing Requirements
+
+53.1 Unit Tests
+
+-   Metrics calculations
+
+-   Status transitions
+
+-   Phase logic
+
+-   Permissions
+
+-   Import mapping
+
+-   Validation
+
+-   Issue lifecycle
+
+53.2 Integration Tests
+
+-   Login
+
+-   Point create/update
+
+-   Issue create/update/resolve
+
+-   Excel import
+
+-   Excel export
+
+-   Role permissions
+
+53.3 Permission Tests
+
+-   Forbmax Admin can administer.
+
+-   Forbmax Member can perform operational updates but not admin
+    configuration.
+
+-   NIMAR User can view and raise issues but cannot modify restricted
+    internal fields.
+
+54. Acceptance Criteria
+
+  -----------------------------------------------------------------------
+  Area                                Acceptance condition
+  ----------------------------------- -----------------------------------
+  Authentication                      Users can log in securely and are
+                                      associated with organization/role.
+
+  Points                              Imported points are
+                                      searchable/filterable and
+                                      authorized users can update
+                                      permitted fields.
+
+  Phases                              Demo Day, 25%, 75%, and SLA are
+                                      supported through the same model.
+
+  Status                              Core lifecycle and validation rules
+                                      work as defined.
+
+  Issues                              NIMAR can raise issues; Forbmax can
+                                      handle and resolve them; history is
+                                      retained.
+
+  Import                              xlsx upload, sheet selection,
+                                      mapping, validation, preview,
+                                      confirmation, and result reporting
+                                      work.
+
+  Export                              All or filtered data can be
+                                      exported to Excel.
+
+  Metrics                             Dashboard and metrics reflect
+                                      current database state accurately.
+
+  Audit                               Important changes appear in history
+                                      with actor and timestamp.
+
+  UI                                  Visual language is consistent with
+                                      the supplied NIMAR deployment-plan
+                                      reference.
+
+  Client access                       NIMAR can access through a normal
+                                      HTTPS browser session without
+                                      special infrastructure.
+  -----------------------------------------------------------------------
+
+55. MVP Release Structure
+
+Release 1 - Demo Day Tracker
+
+-   Authentication and roles
+
+-   Excel import
+
+-   Point register
+
+-   Point drawer
+
+-   Status updates
+
+-   Issue creation
+
+-   Comments
+
+-   Activity history
+
+-   Dashboard
+
+-   Basic metrics
+
+-   Excel export
+
+Release 2 - Delivery Visualization
+
+-   Kanban
+
+-   Timeline/Gantt
+
+-   Richer metrics
+
+-   Response-time reporting
+
+-   Better evidence management
+
+Release 3 - Full Delivery Lifecycle
+
+-   25%
+
+-   75%
+
+-   SLA
+
+-   Phase-specific reporting
+
+-   Additional automation only where justified
+
+56. Recommended First Version Data Flow
+
+EXCEL
+|
+v
+Upload / Import
+|
+v
+Validate + Preview
+|
+v
+DATABASE
+|
++---- Dashboard
++---- Points ---- Issues ---- Comments ---- Evidence
++---- Metrics
++---- Activity Log
+
+57. Recommended Core Workflow
+
+  1. Forbmax imports current sheet.
+
+  2. System validates rows.
+
+  3. Forbmax confirms import.
+
+  4. Points appear in tracker.
+
+  5. Forbmax updates implementation/status.
+
+  6. NIMAR views progress.
+
+  7. NIMAR raises issue when needed.
+
+  8. Forbmax addresses issue.
+
+  9. NIMAR verifies.
+
+  10. Point becomes Verified & Closed.
+
+  11. Metrics update automatically.
+
+58. Non-Functional Requirements
+
+  -----------------------------------------------------------------------
+  Quality                             Requirement
+  ----------------------------------- -----------------------------------
+  Maintainable                        Readable, modular code and
+                                      predictable patterns.
+
+  Lightweight                         No unnecessary frameworks or
+                                      services.
+
+  Secure                              Server-side organization and role
+                                      authorization.
+
+  Recoverable                         Backups and restore capability.
+
+  Observable                          Basic logs and health checks.
+
+  Extensible                          Future phases reuse the same model.
+
+  Usable                              Users familiar with the sheet can
+                                      adapt quickly.
+  -----------------------------------------------------------------------
+
+59. Open Decisions / Items to Confirm
+
+-   Exact current spreadsheet structure: workbook/sheets/columns and
+    which sheet is authoritative.
+
+-   Final phase taxonomy: business phases versus workflow/reporting
+    categories such as Accepted or Documentation.
+
+-   Final mapping of free-form spreadsheet statuses into structured
+    application statuses.
+
+-   Whether NIMAR needs separate Admin/Reviewer permissions later.
+
+-   Whether evidence is stored as uploads, URLs, existing company
+    storage, or a combination.
+
+-   Exact authentication provider/domain for external client access.
+
+60. Definition of Success
+
+The product is successful when the team can stop using the spreadsheet
+as the operational tracker. Forbmax can Import -> Manage -> Update ->
+Resolve -> Report, while NIMAR can Login -> Review -> Comment -> Raise
+Issue -> Verify. Neither side needs spreadsheet editing, database
+access, VPN access, or local installation.
+
+61. Final Product Definition
+
+  -----------------------------------------------------------------------
+  Final definition
+  NIMAR Delivery & Client Closure Tracker is a lightweight web
+  application that converts the existing NIMAR spreadsheet-based delivery
+  process into a controlled, searchable, auditable, client-accessible
+  tracker. Its central purpose is to replace the spreadsheet with a
+  single web-based source of truth for delivery points, phases, statuses,
+  issues, client verification, evidence, history, and management metrics.
+  -----------------------------------------------------------------------
+
+  -----------------------------------------------------------------------
+
+MVP priority: make Demo Day fully operational first. The database and UI
+should support 25%, 75%, and SLA from the beginning, but the
+implementation should activate those stages progressively without
+building separate systems for each phase.

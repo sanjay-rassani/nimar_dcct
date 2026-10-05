@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Kanban · NIMAR Delivery Tracker{% endblock %}
+{% block body_class %}control-room{% endblock %}
+{% block main_class %}container-wide{% endblock %}
+{% block content %}
+<section class="dash-layout" id="kanban-app" data-is-forbmax="{{ is_forbmax|yesno:'true,false' }}">
+  <div class="import-header">
+    <div>
+      <h1>Kanban</h1>
+      <p class="muted">Status board for delivery points. Change status with the dropdown.</p>
+    </div>
+    <a class="btn btn-small btn-ghost" href="{% url 'tracker:register' %}">Register</a>
+  </div>
+  <p class="error" id="kanban-error" hidden></p>
+  <div class="kanban-board" id="kanban-board">Loading…</div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/kanban.js"></script>
+{% endblock %}

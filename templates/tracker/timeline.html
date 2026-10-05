@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Timeline · NIMAR Delivery Tracker{% endblock %}
+{% block body_class %}control-room{% endblock %}
+{% block main_class %}container-wide{% endblock %}
+{% block content %}
+<section class="dash-layout" id="timeline-app">
+  <div class="import-header">
+    <div>
+      <h1>Timeline</h1>
+      <p class="muted">Phase milestones, progress, and overdue counts. No task dependencies.</p>
+    </div>
+    <a class="btn btn-small btn-ghost" href="{% url 'metrics:dashboard' %}">Dashboard</a>
+  </div>
+  <p class="error" id="timeline-error" hidden></p>
+  <div id="timeline-board" class="timeline-board muted">Loading…</div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/timeline.js"></script>
+{% endblock %}

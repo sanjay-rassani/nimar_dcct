@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% block title %}Points · NIMAR Delivery Tracker{% endblock %}
+{% block body_class %}control-room{% endblock %}
+{% block main_class %}container-wide{% endblock %}
+{% block content %}
+<section class="control-layout" id="points-app"
+  data-can-create="{{ can_create|yesno:'true,false' }}"
+  data-is-nimar="{{ is_nimar|yesno:'true,false' }}"
+  data-is-forbmax="{{ is_forbmax|yesno:'true,false' }}">
+  <aside class="filter-rail">
+    <h2>Filters</h2>
+    <label>Search
+      <input type="search" id="filter-q" placeholder="ID, title, requirement…">
+    </label>
+    <label>Phase
+      <select id="filter-phase">
+        <option value="">All</option>
+        {% for p in phases %}
+        <option value="{{ p.id }}">{{ p.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Module
+      <select id="filter-module">
+        <option value="">All</option>
+        {% for m in modules %}
+        <option value="{{ m.id }}">{{ m.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Status
+      <select id="filter-status">
+        <option value="">All</option>
+        {% for value, label in statuses %}
+        <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Annexure
+      <input type="text" id="filter-annexure" placeholder="A / B">
+    </label>
+    <label>Issue status
+      <select id="filter-issue-status">
+        <option value="">All</option>
+        <option value="OPEN">Open</option>
+        <option value="ACKNOWLEDGED">Acknowledged</option>
+        <option value="IN_PROGRESS">In Progress</option>
+        <option value="RESOLVED">Resolved</option>
+        <option value="CLOSED">Closed</option>
+      </select>
+    </label>
+    <label>Owner
+      <select id="filter-owner">
+        <option value="">All</option>
+        {% for o in owners %}
+        <option value="{{ o.id }}">{{ o.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Due from
+      <input type="date" id="filter-due-from">
+    </label>
+    <label>Due to
+      <input type="date" id="filter-due-to">
+    </label>
+    <div class="filter-actions">
+      <button type="button" class="btn btn-small" id="btn-apply-filters">Apply</button>
+      <button type="button" class="btn btn-small btn-ghost" id="btn-reset-filters">Reset</button>
+    </div>
+  </aside>
+
+  <div class="register-main">
+    <div class="kpi-strip" id="kpi-strip">
+      <div class="kpi-card"><span class="kpi-label">Total</span><strong id="kpi-total">—</strong></div>
+      <div class="kpi-card"><span class="kpi-label">Closed</span><strong id="kpi-closed">—</strong></div>
+      <div class="kpi-card"><span class="kpi-label">Open issues</span><strong id="kpi-open-issues">—</strong></div>
+      <div class="kpi-card nimar-only" hidden><span class="kpi-label">Needs NIMAR review</span><strong id="kpi-nimar-review">—</strong></div>
+      <div class="kpi-card forbmax-only" hidden><span class="kpi-label">In progress</span><strong id="kpi-in-progress">—</strong></div>
+      <div class="kpi-card forbmax-only" hidden><span class="kpi-label">Client pending</span><strong id="kpi-client-pending">—</strong></div>
+      <div class="kpi-card"><span class="kpi-label">Overdue</span><strong id="kpi-overdue">—</strong></div>
+    </div>
+    <div class="register-toolbar">
+      <div>
+        <h1>Delivery Points</h1>
+        <p class="muted" id="result-count">Loading…</p>
+      </div>
+      <div class="toolbar-actions">
+        <label class="inline-sort">Sort
+          <select id="sort-field">
+            <option value="external_id">ID</option>
+            <option value="module">Module</option>
+            <option value="phase">Phase</option>
+            <option value="status">Status</option>
+            <option value="due_date">Due date</option>
+            <option value="updated_at">Updated</option>
+          </select>
+          <select id="sort-dir">
+            <option value="asc">Asc</option>
+            <option value="desc">Desc</option>
+          </select>
+        </label>
+        {% if is_forbmax %}
+        <a class="btn btn-small btn-ghost" id="btn-export-filtered" href="/api/export/excel/">Export filtered</a>
+        <a class="btn btn-small btn-ghost" href="{% url 'imports_app:import' %}">Import</a>
+        {% endif %}
+        {% if can_create %}
+        <button type="button" class="btn btn-small" id="btn-create-point">New point</button>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="compact-table" id="points-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Module</th>
+            <th>Title / Requirement</th>
+            <th>Phase</th>
+            <th>Status</th>
+            <th>Owner</th>
+            <th>Due</th>
+            <th>Issues</th>
+            <th>Updated</th>
+          </tr>
+        </thead>
+        <tbody id="points-tbody">
+          <tr><td colspan="9" class="muted">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-bar" id="pagination-bar"></div>
+  </div>
+</section>
+
+<div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+<aside class="point-drawer" id="point-drawer" aria-hidden="true">
+  <div class="drawer-header">
+    <div>
+      <div class="drawer-id" id="drawer-external-id">—</div>
+      <div class="drawer-sub muted" id="drawer-meta">—</div>
+    </div>
+    <button type="button" class="btn btn-small btn-ghost" id="drawer-close" aria-label="Close">Close</button>
+  </div>
+  <div class="drawer-tabs">
+    <button type="button" class="tab active" data-tab="details">Details</button>
+    <button type="button" class="tab" data-tab="issues">Issues</button>
+    <button type="button" class="tab" data-tab="evidence">Evidence</button>
+    <button type="button" class="tab" data-tab="activity">Activity</button>
+  </div>
+  <div class="drawer-body">
+    <div class="tab-panel" data-panel="details">
+      <form id="drawer-form" class="drawer-form">
+        <label>Status
+          <select name="status" id="field-status"></select>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" name="scope_approved" id="field-scope-approved">
+          Scope approved
+        </label>
+        <label>Requirement
+          <textarea name="requirement" id="field-requirement" rows="4"></textarea>
+        </label>
+        <label>Forbmax response
+          <textarea name="forbmax_response" id="field-forbmax-response" rows="3"></textarea>
+        </label>
+        <label>NIMAR response
+          <textarea name="nimar_response" id="field-nimar-response" rows="3"></textarea>
+        </label>
+        <label>Decision
+          <textarea name="decision" id="field-decision" rows="2"></textarea>
+        </label>
+        <label>Remarks
+          <textarea name="remarks" id="field-remarks" rows="2"></textarea>
+        </label>
+        <div class="form-row">
+          <label>Owner
+            <select name="owner" id="field-owner">
+              <option value="">—</option>
+              {% for o in owners %}
+              <option value="{{ o.id }}">{{ o.name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>Due date
+            <input type="date" name="due_date" id="field-due-date">
+          </label>
+        </div>
+        <div class="form-row">
+          <label>Phase
+            <select name="phase" id="field-phase">
+              <option value="">—</option>
+              {% for p in phases %}
+              <option value="{{ p.id }}">{{ p.name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>Module
+            <select name="module" id="field-module">
+              <option value="">—</option>
+              {% for m in modules %}
+              <option value="{{ m.id }}">{{ m.name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+        </div>
+        <p class="error" id="drawer-error" hidden></p>
+        <div class="drawer-actions">
+          <button type="submit" class="btn btn-small" id="drawer-save">Save</button>
+        </div>
+      </form>
+      <form id="point-comment-form" class="drawer-form stack-tight comment-box">
+        <h3>Point comment</h3>
+        <label>Message
+          <textarea name="message" rows="2" required></textarea>
+        </label>
+        <button type="submit" class="btn btn-small btn-ghost">Add comment</button>
+      </form>
+      <ul id="point-comments-list" class="comment-list"></ul>
+    </div>
+    <div class="tab-panel" data-panel="issues" hidden>
+      <div id="issues-panel">
+        <form id="issue-create-form" class="drawer-form stack-tight">
+          <h3>Raise issue</h3>
+          <label>Title
+            <input name="title" required placeholder="Short issue title">
+          </label>
+          <label>Description
+            <textarea name="description" rows="3" placeholder="Describe the issue"></textarea>
+          </label>
+          <label>Evidence label (optional)
+            <input name="evidence_label" placeholder="Screenshot / test report">
+          </label>
+          <label>Evidence URL (optional)
+            <input name="evidence_url" type="url" placeholder="https://…">
+          </label>
+          <label>Evidence file (optional)
+            <input name="evidence_file" type="file" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.txt,.doc,.docx,.xlsx,.csv,.mp4,.webm">
+          </label>
+          <p class="error" id="issue-create-error" hidden></p>
+          <button type="submit" class="btn btn-small">Submit issue</button>
+        </form>
+        <div id="issues-list" class="issues-list"></div>
+      </div>
+    </div>
+    <div class="tab-panel" data-panel="evidence" hidden>
+      <form id="evidence-create-form" class="drawer-form stack-tight">
+        <h3>Add evidence</h3>
+        <label>Label
+          <input name="label" required>
+        </label>
+        <label>Type
+          <select name="attachment_type">
+            <option value="SCOPE">Scope</option>
+            <option value="VERIFICATION">Verification</option>
+            <option value="URL">URL</option>
+            <option value="FILE">File</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </label>
+        <label>URL
+          <input name="url" type="url" placeholder="https://…">
+        </label>
+        <label>File
+          <input name="file" type="file" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.txt,.doc,.docx,.xlsx,.csv,.mp4,.webm">
+        </label>
+        <p class="error" id="evidence-create-error" hidden></p>
+        <button type="submit" class="btn btn-small">Add evidence</button>
+      </form>
+      <ul id="evidence-list" class="evidence-list"></ul>
+    </div>
+    <div class="tab-panel" data-panel="activity">
+      <ul class="activity-list" id="activity-list"></ul>
+    </div>
+  </div>
+</aside>
+
+<dialog id="create-dialog">
+  <form method="dialog" id="create-form" class="drawer-form">
+    <h2>New delivery point</h2>
+    <label>Point ID
+      <input name="external_id" required placeholder="A-010">
+    </label>
+    <label>Title
+      <input name="title">
+    </label>
+    <label>Requirement
+      <textarea name="requirement" rows="3"></textarea>
+    </label>
+    <label>Phase
+      <select name="phase">
+        {% for p in phases %}
+        <option value="{{ p.id }}" {% if p.code == "DEMO_DAY" %}selected{% endif %}>{{ p.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Module
+      <select name="module">
+        <option value="">—</option>
+        {% for m in modules %}
+        <option value="{{ m.id }}">{{ m.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <p class="error" id="create-error" hidden></p>
+    <div class="drawer-actions">
+      <button type="submit" class="btn btn-small" value="save">Create</button>
+      <button type="submit" class="btn btn-small btn-ghost" value="cancel">Cancel</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}
+{% block scripts %}
+<script>
+  window.DCCT_WRITABLE = {{ writable_fields_json|safe }};
+</script>
+<script src="/static/js/points.js"></script>
+{% endblock %}

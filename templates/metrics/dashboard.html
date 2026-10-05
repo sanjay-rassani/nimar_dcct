@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · NIMAR Delivery Tracker{% endblock %}
+{% block body_class %}control-room{% endblock %}
+{% block main_class %}container-wide{% endblock %}
+{% block content %}
+<section class="dash-layout" id="dashboard-app"
+  data-is-nimar="{{ is_nimar|yesno:'true,false' }}"
+  data-is-forbmax="{{ is_forbmax|yesno:'true,false' }}">
+  <div class="import-header">
+    <div>
+      <h1>{% if is_nimar %}NIMAR progress{% else %}Forbmax delivery control{% endif %}</h1>
+      <p class="muted" id="dash-subtitle">Loading dashboard…</p>
+    </div>
+    <div class="toolbar-actions">
+      <a class="btn btn-small btn-ghost" href="{% url 'metrics:metrics' %}">Full metrics</a>
+      <a class="btn btn-small" href="{% url 'tracker:register' %}">Points register</a>
+    </div>
+  </div>
+
+  <div class="kpi-strip" id="dash-kpis"></div>
+
+  <div class="dash-grid">
+    <section class="import-panel">
+      <h2>Progress by phase</h2>
+      <div id="dash-phases" class="muted">Loading…</div>
+    </section>
+    <section class="import-panel">
+      <h2>Progress by module</h2>
+      <div id="dash-modules" class="muted">Loading…</div>
+    </section>
+    <section class="import-panel">
+      <h2>{% if is_nimar %}Needs NIMAR review{% else %}Forbmax focus{% endif %}</h2>
+      <div id="dash-focus" class="muted">Loading…</div>
+    </section>
+    <section class="import-panel">
+      <h2>Issue summary</h2>
+      <div id="dash-issues" class="muted">Loading…</div>
+    </section>
+    <section class="import-panel import-wide">
+      <h2>Trends</h2>
+      <div class="chart-row">
+        <canvas id="chart-closed" height="120"></canvas>
+        <canvas id="chart-issues" height="120"></canvas>
+      </div>
+    </section>
+    <section class="import-panel import-wide">
+      <h2>Recent updates</h2>
+      <div id="dash-recent" class="muted">Loading…</div>
+    </section>
+  </div>
+  <p class="error" id="dash-error" hidden></p>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="/static/js/dashboard.js"></script>
+{% endblock %}

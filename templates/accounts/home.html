@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Home · NIMAR Delivery Tracker{% endblock %}
+{% block content %}
+<section class="home-panel">
+  <h1>Welcome, {{ user_obj.name }}</h1>
+  <p class="muted">Use the points register to search, filter, and update delivery items.</p>
+  <dl class="meta-grid">
+    <div>
+      <dt>Email</dt>
+      <dd>{{ user_obj.email }}</dd>
+    </div>
+    <div>
+      <dt>Organization</dt>
+      <dd>{{ user_obj.organization.name|default:"—" }}</dd>
+    </div>
+    <div>
+      <dt>Role</dt>
+      <dd>{{ user_obj.get_role_display }}</dd>
+    </div>
+  </dl>
+  <p>
+    <a class="btn" href="{% url 'tracker:register' %}">Open points register</a>
+    <a class="btn btn-small btn-ghost" href="/health/">System health</a>
+  </p>
+</section>
+{% endblock %}

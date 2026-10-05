@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Login · NIMAR Delivery Tracker{% endblock %}
+{% block content %}
+<section class="login-panel">
+  <h1>Sign in</h1>
+  <p class="muted">Forbmax manages delivery. NIMAR reviews progress and raises issues.</p>
+  {% if error %}
+  <p class="error">{{ error }}</p>
+  {% endif %}
+  <form method="post" action="{% url 'accounts:login' %}" class="stack">
+    {% csrf_token %}
+    <label>
+      Email
+      <input type="email" name="email" required autocomplete="username" autofocus>
+    </label>
+    <label>
+      Password
+      <input type="password" name="password" required autocomplete="current-password">
+    </label>
+    <button type="submit" class="btn">Login</button>
+  </form>
+  <div class="seed-hint muted">
+    <p>Seeded accounts (dev):</p>
+    <ul>
+      <li>admin@forbmax.local</li>
+      <li>member@forbmax.local</li>
+      <li>user@nimar.local</li>
+    </ul>
+  </div>
+</section>
+{% endblock %}
